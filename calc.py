@@ -50,8 +50,10 @@ NEGATE_AST = 5
 
 index = 0
 
+print("here")
+
 def current ():
-	return tokens[index][0]
+	return (tokens[index])[0]
 
 def eat(token):
 	global index
