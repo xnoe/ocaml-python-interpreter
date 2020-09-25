@@ -322,7 +322,6 @@ let build_ast tokens =
 	let eat token = 
 		if current () = token then (
 			index := !index + 1;
-			print_endline ("Ate: " ^ string_of_token token)
 		) else
 			raise (Failure ("Invalid Token! Expected: " ^ string_of_token token ^ ", got: " ^ string_of_token (current ())))
 	in
@@ -399,7 +398,6 @@ let build_ast tokens =
 	
 	let rec variable () =
 		eat_whitespace ();
-		print_endline (string_of_token (current ()));
 		let node = ref (Variable (string_of_id (current ()))) in
 		eat_id ();
 		!node
@@ -938,12 +936,13 @@ let interpret ast=
 			| Variable v -> (
 				let found = ref false in
 				let returnable = ref Nothing in
-				for i = 0 to List.length vars - 1 do
+				let _ = try for i = 0 to List.length vars - 1 do
 					if Hashtbl.mem (List.nth vars i) (Variable v) then (
 						found := true;
-						returnable := Hashtbl.find (List.nth vars i) (Variable v)
+						returnable := Hashtbl.find (List.nth vars i) (Variable v);
+						raise Exit;
 					)
-				done;
+				done with Exit -> () in
 				if !found <> true then
 					returnable := get_var (Variable v);
 				!returnable
@@ -1072,19 +1071,23 @@ let interpret ast=
 					)
 					| _ -> (
 						let returnable = ref Nothing in
+
 						let function_call = ref PlaceHolder in
 						let function_call_input = ref PlaceHolder in
+
 						for i = 0 to List.length funcs - 1 do
 							if Hashtbl.mem (List.nth funcs i) func then (
 								function_call := Hashtbl.find (List.nth funcs i) func;
 								function_call_input := Hashtbl.find (List.nth funcinputs i) func
 							)
 						done;
-						if !function_call = PlaceHolder then
+
+						if !function_call = PlaceHolder then (
 							if Hashtbl.mem functions func then (
 								function_call := Hashtbl.find functions func;
 								function_call_input := Hashtbl.find functions_input func
-							);
+							)
+						);
 						if !function_call <> PlaceHolder then (
 							let arglist = list_of_arglist args in
 							let inputlist = list_of_inputlist !function_call_input in
@@ -1093,7 +1096,7 @@ let interpret ast=
 								let func_funcs = Hashtbl.copy (List.nth funcs 0) in
 								let func_funcinputs = Hashtbl.copy (List.nth funcinputs 0) in
 								for i = 0 to List.length inputlist - 1 do
-									Hashtbl.replace func_vars (List.nth inputlist i) (eval vars globals nonlocals funcs funcinputs (List.nth arglist i))
+									Hashtbl.replace func_vars (List.nth inputlist i) (eval vars globals nonlocals funcs funcinputs (List.nth arglist i));
 								done;
 								returnable := eval ([func_vars] @ vars) (ref ([[]] @ !globals)) (ref ([[]] @ !nonlocals)) ([func_funcs] @ funcs) ([func_funcinputs] @ funcinputs) !function_call;
 								if List.length !return_stack >= 1 then (
@@ -1101,10 +1104,12 @@ let interpret ast=
 									return_stack := List.tl !return_stack;
 								);
 								!returnable
-							) else
+							) else (
 								raise (Failure ("Too many / too little args for function: " ^ name_of_variable func))
-						) else
-							raise (Failure ("Undefined Function: " ^ name_of_variable func)) 
+							)
+						) else (
+							raise (Failure ("Undefined Function: " ^ name_of_variable func))
+						);
 						!returnable
 					)
 			)

@@ -50,8 +50,6 @@ NEGATE_AST = 5
 
 index = 0
 
-print("here")
-
 def current ():
 	return (tokens[index])[0]
 
@@ -116,4 +114,5 @@ def interpret (ast):
 	elif ast[0] == NEGATE_AST:
 		return -interpret(ast[1])
 
-print("Your answer: " + str(interpret(expr())))
+ast = expr()
+print("Your answer: " + str(interpret(ast)))
