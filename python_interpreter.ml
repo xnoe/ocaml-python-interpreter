@@ -938,12 +938,10 @@ let interpret ast=
 				List !tmp_list
 			)
 			| Variable v -> (
-				let found = ref false in
-				let returnable = ref Nothing in
-				let rec find = function [] -> () | tl -> if Hashtbl.mem (List.hd tl) (Variable v) then (found := true; returnable := Hashtbl.find (List.hd tl) (Variable v)) else find (List.tl tl) in find vars;
-				if !found <> true then
-					returnable := get_var (Variable v);
-				!returnable
+				let rec find = function
+					[] -> get_var (Variable v)
+					| tl -> if Hashtbl.mem (List.hd tl) (Variable v) then Hashtbl.find (List.hd tl) (Variable v)
+						else find (List.tl tl) in find vars;
 			)
 			| Compound c -> (
 				for i = 0 to List.length c - 1 do
@@ -1252,5 +1250,7 @@ let interpret ast=
 	eval [empty_vars_table] empty_globals empty_nonlocals [empty_funcs_table] [empty_funcinputs_table] ast
 	
 let tokens = tokenise program;;
+
 let ast = build_ast tokens;;
+
 interpret ast;
