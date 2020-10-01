@@ -936,13 +936,14 @@ let interpret ast=
 			| Variable v -> (
 				let found = ref false in
 				let returnable = ref Nothing in
-				let _ = try for i = 0 to List.length vars - 1 do
+				(*let _ = try for i = 0 to List.length vars - 1 do
 					if Hashtbl.mem (List.nth vars i) (Variable v) then (
 						found := true;
 						returnable := Hashtbl.find (List.nth vars i) (Variable v);
 						raise Exit;
 					)
-				done with Exit -> () in
+				done with Exit -> () in*)
+				let rec find = function [] -> () | tl -> if Hashtbl.mem (List.hd tl) (Variable v) then (found := true; returnable := Hashtbl.find (List.hd tl) (Variable v)) else find (List.tl tl) in find vars;
 				if !found <> true then
 					returnable := get_var (Variable v);
 				!returnable
