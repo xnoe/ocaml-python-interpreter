@@ -47,6 +47,7 @@ type tokens =
 	| Not
 	| Nonlocal
 	| Global
+	| Class
 	
 let program = ref Bytes.empty
 
@@ -152,6 +153,7 @@ let tokenise program =
 					| "while" -> tokens := !tokens @ [While]
 					| "global" -> tokens := !tokens @ [Global]
 					| "nonlocal" -> tokens := !tokens @ [Nonlocal]
+					| "class" -> tokens := !tokens @ [Class]
 					| _ -> tokens := !tokens @ [ID !text]
 			)
 			| '"' -> (
@@ -265,6 +267,7 @@ let string_of_token tok =
 		| Newline -> "Newline"
 		| EOF -> "End of File"
 		| Assign -> "Assign"
+		| Class -> "Class"
 		| _ -> "NOT IMPLEMENTED YET"
 		
 let print_tokens tokens =
@@ -454,6 +457,7 @@ let build_ast tokens =
 				let tmp_value = ref (factor ()) in
 				Hashtbl.replace tmp_Hashtbl !tmp_key !tmp_value;
 			done;
+			eat RightCBrace;
 			node := DictValue tmp_Hashtbl
 		) else (
 			node := variable ();
